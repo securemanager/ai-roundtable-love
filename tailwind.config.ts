@@ -52,6 +52,12 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// AI Model Colors
+				chatgpt: 'hsl(var(--chatgpt))',
+				claude: 'hsl(var(--claude))',
+				gemini: 'hsl(var(--gemini))',
+				grok: 'hsl(var(--grok))',
+				llama: 'hsl(var(--llama))',
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
