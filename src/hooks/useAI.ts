@@ -19,7 +19,7 @@ export const useAI = () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini', // Updated to current model
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
         temperature: 0.7,
@@ -27,11 +27,13 @@ export const useAI = () => {
     });
 
     if (!response.ok) {
-      throw new Error(`OpenAI API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData?.error?.message || `OpenAI API returned ${response.status} ${response.statusText}`;
+      throw new Error(`OpenAI Error: ${errorMessage}`);
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content || 'No response';
+    return data.choices[0]?.message?.content || 'No response received';
   };
 
   const callClaude = async (prompt: string, apiKey: string): Promise<string> => {
@@ -43,18 +45,20 @@ export const useAI = () => {
         'anthropic-version': '2023-06-01',
       },
       body: JSON.stringify({
-        model: 'claude-3-sonnet-20240229',
+        model: 'claude-3-haiku-20240307',
         max_tokens: 500,
         messages: [{ role: 'user', content: prompt }],
       }),
     });
 
     if (!response.ok) {
-      throw new Error(`Claude API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData?.error?.message || `Claude API returned ${response.status} ${response.statusText}`;
+      throw new Error(`Claude Error: ${errorMessage}`);
     }
 
     const data = await response.json();
-    return data.content[0]?.text || 'No response';
+    return data.content[0]?.text || 'No response received';
   };
 
   const callGemini = async (prompt: string, apiKey: string): Promise<string> => {
@@ -73,11 +77,13 @@ export const useAI = () => {
     });
 
     if (!response.ok) {
-      throw new Error(`Gemini API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData?.error?.message || `Gemini API returned ${response.status} ${response.statusText}`;
+      throw new Error(`Gemini Error: ${errorMessage}`);
     }
 
     const data = await response.json();
-    return data.candidates[0]?.content?.parts[0]?.text || 'No response';
+    return data.candidates[0]?.content?.parts[0]?.text || 'No response received';
   };
 
   const callGrok = async (prompt: string, apiKey: string): Promise<string> => {
@@ -96,15 +102,20 @@ export const useAI = () => {
     });
 
     if (!response.ok) {
-      throw new Error(`Grok API error: ${response.statusText}`);
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData?.error?.message || `Grok API returned ${response.status} ${response.statusText}`;
+      throw new Error(`Grok Error: ${errorMessage}`);
     }
 
     const data = await response.json();
-    return data.choices[0]?.message?.content || 'No response';
+    return data.choices[0]?.message?.content || 'No response received';
   };
 
   const callLlama = async (prompt: string, baseUrl: string): Promise<string> => {
-    const response = await fetch(`${baseUrl}/api/generate`, {
+    // Clean up the URL
+    const cleanUrl = baseUrl.replace(/\/$/, '');
+    
+    const response = await fetch(`${cleanUrl}/api/generate`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -117,11 +128,16 @@ export const useAI = () => {
     });
 
     if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.statusText}`);
+      if (response.status === 0 || !response.status) {
+        throw new Error('Ollama Error: Cannot connect to Ollama. Make sure Ollama is running and accessible.');
+      }
+      const errorData = await response.json().catch(() => ({}));
+      const errorMessage = errorData?.error || `Ollama returned ${response.status} ${response.statusText}`;
+      throw new Error(`Ollama Error: ${errorMessage}`);
     }
 
     const data = await response.json();
-    return data.response || 'No response';
+    return data.response || 'No response received';
   };
 
   const updateResponse = (modelId: string, update: Partial<AIResponse>) => {
@@ -143,19 +159,30 @@ export const useAI = () => {
       
       switch (modelId) {
         case 'claude':
-          if (!apiKeys.anthropic) throw new Error('Anthropic API key is missing');
+          if (!apiKeys.anthropic) {
+            throw new Error('Missing API key for Claude. Please add your Anthropic API key in Settings.');
+          }
+          if (!apiKeys.anthropic.startsWith('sk-ant-')) {
+            throw new Error('Invalid Anthropic API key format. Key should start with "sk-ant-"');
+          }
           content = await callClaude(prompt, apiKeys.anthropic);
           break;
         case 'gemini':
-          if (!apiKeys.google) throw new Error('Google AI API key is missing');
+          if (!apiKeys.google) {
+            throw new Error('Missing API key for Gemini. Please add your Google AI API key in Settings.');
+          }
           content = await callGemini(prompt, apiKeys.google);
           break;
         case 'grok':
-          if (!apiKeys.xai) throw new Error('xAI API key is missing');
+          if (!apiKeys.xai) {
+            throw new Error('Missing API key for Grok. Please add your xAI API key in Settings.');
+          }
           content = await callGrok(prompt, apiKeys.xai);
           break;
         case 'llama':
-          if (!apiKeys.ollama) throw new Error('Ollama URL is missing');
+          if (!apiKeys.ollama) {
+            throw new Error('Missing Ollama URL. Please add your Ollama server URL in Settings.');
+          }
           content = await callLlama(prompt, apiKeys.ollama);
           break;
         default:
@@ -227,18 +254,31 @@ Please provide a concise summary that synthesizes the key insights from these re
       isLoading: false
     });
 
-    // Call all models in parallel
-    const modelPromises = ['claude', 'gemini', 'grok', 'llama'].map(modelId => 
-      callModel(modelId, prompt)
-    );
+    // Call all models in parallel and collect their responses
+    const modelIds = ['claude', 'gemini', 'grok', 'llama'];
+    const completedResponses: Record<string, AIResponse> = {};
+    
+    const promises = modelIds.map(async (modelId) => {
+      try {
+        await callModel(modelId, prompt);
+        // We need to get the updated response after the call
+        // This will be handled in the useEffect hook
+      } catch (error) {
+        console.error(`Error calling ${modelId}:`, error);
+      }
+    });
 
-    // Wait for all models to complete
-    await Promise.allSettled(modelPromises);
-
-    // Generate summary after all models complete
+    // Wait for all models to finish (success or failure)
+    await Promise.allSettled(promises);
+    
+    // Wait a bit for state updates to propagate, then generate summary
     setTimeout(() => {
-      generateSummary(prompt, responses);
-    }, 1000);
+      // Get current responses from state
+      setResponses(currentResponses => {
+        generateSummary(prompt, currentResponses);
+        return currentResponses;
+      });
+    }, 500);
   };
 
   const refreshModel = (modelId: string, prompt: string) => {

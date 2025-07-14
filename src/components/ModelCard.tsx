@@ -65,9 +65,12 @@ export const ModelCard: React.FC<ModelCardProps> = ({
       
       <CardContent className="space-y-3">
         {response.error ? (
-          <div className="flex items-start gap-2 text-destructive">
-            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
-            <p className="text-sm">{response.error}</p>
+          <div className="flex items-start gap-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+            <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0 text-destructive" />
+            <div className="text-sm text-destructive">
+              <p className="font-medium">Error</p>
+              <p>{response.error}</p>
+            </div>
           </div>
         ) : response.isLoading ? (
           <div className="space-y-2">
