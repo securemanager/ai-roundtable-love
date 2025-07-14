@@ -19,7 +19,7 @@ export const useAI = () => {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'gpt-4o-mini', // Updated to current model
+        model: 'gpt-4o-mini',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
         temperature: 0.7,
@@ -64,15 +64,10 @@ export const useAI = () => {
   const callGemini = async (prompt: string, apiKey: string): Promise<string> => {
     const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent?key=${apiKey}`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+      headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         contents: [{ parts: [{ text: prompt }] }],
-        generationConfig: {
-          maxOutputTokens: 500,
-          temperature: 0.7,
-        },
+        generationConfig: { maxOutputTokens: 500, temperature: 0.7 },
       }),
     });
 
@@ -112,19 +107,11 @@ export const useAI = () => {
   };
 
   const callLlama = async (prompt: string, baseUrl: string): Promise<string> => {
-    // Clean up the URL
     const cleanUrl = baseUrl.replace(/\/$/, '');
-    
     const response = await fetch(`${cleanUrl}/api/generate`, {
       method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'llama2',
-        prompt: prompt,
-        stream: false,
-      }),
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model: 'llama2', prompt, stream: false }),
     });
 
     if (!response.ok) {
@@ -156,33 +143,23 @@ export const useAI = () => {
 
     try {
       let content = '';
-      
+
       switch (modelId) {
         case 'claude':
-          if (!apiKeys.anthropic) {
-            throw new Error('Missing API key for Claude. Please add your Anthropic API key in Settings.');
-          }
-          if (!apiKeys.anthropic.startsWith('sk-ant-')) {
-            throw new Error('Invalid Anthropic API key format. Key should start with "sk-ant-"');
-          }
+          if (!apiKeys.anthropic) throw new Error('Missing API key for Claude. Please add your Anthropic API key in Settings.');
+          if (!apiKeys.anthropic.startsWith('sk-ant-')) throw new Error('Invalid Anthropic API key format. Key should start with "sk-ant-"');
           content = await callClaude(prompt, apiKeys.anthropic);
           break;
         case 'gemini':
-          if (!apiKeys.google) {
-            throw new Error('Missing API key for Gemini. Please add your Google AI API key in Settings.');
-          }
+          if (!apiKeys.google) throw new Error('Missing API key for Gemini. Please add your Google AI API key in Settings.');
           content = await callGemini(prompt, apiKeys.google);
           break;
         case 'grok':
-          if (!apiKeys.xai) {
-            throw new Error('Missing API key for Grok. Please add your xAI API key in Settings.');
-          }
+          if (!apiKeys.xai) throw new Error('Missing API key for Grok. Please add your xAI API key in Settings.');
           content = await callGrok(prompt, apiKeys.xai);
           break;
         case 'llama':
-          if (!apiKeys.ollama) {
-            throw new Error('Missing Ollama URL. Please add your Ollama server URL in Settings.');
-          }
+          if (!apiKeys.ollama) throw new Error('Missing Ollama URL. Please add your Ollama server URL in Settings.');
           content = await callLlama(prompt, apiKeys.ollama);
           break;
         default:
@@ -192,11 +169,7 @@ export const useAI = () => {
       updateResponse(modelId, { content, isLoading: false });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      updateResponse(modelId, { 
-        error: errorMessage, 
-        isLoading: false,
-        content: ''
-      });
+      updateResponse(modelId, { error: errorMessage, isLoading: false, content: '' });
     }
   };
 
@@ -219,6 +192,16 @@ export const useAI = () => {
         .map(([modelId, response]) => `${modelId.toUpperCase()}: ${response.content}`)
         .join('\n\n');
 
+      if (!validResponses.trim()) {
+        setChatgptResponse({
+          modelId: 'chatgpt',
+          content: '',
+          isLoading: false,
+          error: 'هیچ پاسخی از مدل‌های دیگر دریافت نشد، بنابراین خلاصه‌ای نمی‌توان ساخت.'
+        });
+        return;
+      }
+
       const summaryPrompt = `
 Original question: "${prompt}"
 
@@ -232,7 +215,8 @@ Please provide a concise summary that synthesizes the key insights from these re
       setChatgptResponse({
         modelId: 'chatgpt',
         content,
-        isLoading: false
+        isLoading: false,
+        error: undefined
       });
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Failed to generate summary';
@@ -246,34 +230,21 @@ Please provide a concise summary that synthesizes the key insights from these re
   };
 
   const submitPrompt = async (prompt: string) => {
-    // Reset responses
     setResponses({});
-    setChatgptResponse({
-      modelId: 'chatgpt',
-      content: '',
-      isLoading: false
-    });
+    setChatgptResponse({ modelId: 'chatgpt', content: '', isLoading: false });
 
-    // Call all models in parallel and collect their responses
     const modelIds = ['claude', 'gemini', 'grok', 'llama'];
-    const completedResponses: Record<string, AIResponse> = {};
-    
     const promises = modelIds.map(async (modelId) => {
       try {
         await callModel(modelId, prompt);
-        // We need to get the updated response after the call
-        // This will be handled in the useEffect hook
       } catch (error) {
         console.error(`Error calling ${modelId}:`, error);
       }
     });
 
-    // Wait for all models to finish (success or failure)
     await Promise.allSettled(promises);
-    
-    // Wait a bit for state updates to propagate, then generate summary
+
     setTimeout(() => {
-      // Get current responses from state
       setResponses(currentResponses => {
         generateSummary(prompt, currentResponses);
         return currentResponses;
