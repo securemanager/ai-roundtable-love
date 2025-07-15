@@ -12,7 +12,7 @@ export const SettingsPanel: React.FC = () => {
     { key: 'openai' as const, label: 'OpenAI API Key', placeholder: 'sk-...' },
     { key: 'anthropic' as const, label: 'Anthropic API Key', placeholder: 'sk-ant-...' },
     { key: 'google' as const, label: 'Google AI API Key', placeholder: 'AI...' },
-    { key: 'xai' as const, label: 'xAI API Key', placeholder: 'xai-...' },
+    { key: 'deepseek' as const, label: 'DeepSeek API Key', placeholder: 'sk-...' },
     { key: 'ollama' as const, label: 'Ollama URL', placeholder: 'http://localhost:11434' }
   ];
 

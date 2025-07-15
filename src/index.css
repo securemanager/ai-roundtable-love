@@ -43,7 +43,7 @@
     --chatgpt: 142 71% 45%;
     --claude: 25 95% 53%;
     --gemini: 221 83% 53%;
-    --grok: 280 100% 70%;
+    --deepseek: 259 94% 51%;
     --llama: 197 71% 52%;
 
     /* Gradients */
@@ -129,24 +129,49 @@
 }
 
 @layer components {
-  /* Roundtable Layout */
+  /* Roundtable Layout - Responsive */
   .roundtable-container {
     @apply relative w-full max-w-6xl mx-auto;
     min-height: 600px;
   }
 
-  .center-card {
-    @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
-    @apply w-80 h-64 z-10;
+  /* Mobile: Stack vertically */
+  @media (max-width: 768px) {
+    .roundtable-container {
+      @apply flex flex-col gap-4;
+      min-height: auto;
+    }
+    
+    .center-card {
+      @apply relative top-auto left-auto transform-none;
+      @apply w-full max-w-md mx-auto order-first;
+    }
+    
+    .model-card {
+      @apply relative w-full max-w-md mx-auto;
+      @apply bg-card border border-border rounded-lg;
+      @apply p-4 shadow-lg;
+      background: var(--gradient-card);
+      box-shadow: var(--shadow-card);
+      transition: var(--transition-smooth);
+    }
   }
 
-  .model-card {
-    @apply absolute w-64 h-48;
-    @apply bg-card border border-border rounded-lg;
-    @apply p-4 shadow-lg;
-    background: var(--gradient-card);
-    box-shadow: var(--shadow-card);
-    transition: var(--transition-smooth);
+  /* Tablet and Desktop: Original roundtable layout */
+  @media (min-width: 769px) {
+    .center-card {
+      @apply absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2;
+      @apply w-80 h-64 z-10;
+    }
+
+    .model-card {
+      @apply absolute w-64 h-48;
+      @apply bg-card border border-border rounded-lg;
+      @apply p-4 shadow-lg;
+      background: var(--gradient-card);
+      box-shadow: var(--shadow-card);
+      transition: var(--transition-smooth);
+    }
   }
 
   .model-card:hover {
@@ -170,9 +195,9 @@
     box-shadow: var(--shadow-model) hsl(var(--gemini) / 0.3);
   }
 
-  .card-grok {
-    border-color: hsl(var(--grok));
-    box-shadow: var(--shadow-model) hsl(var(--grok) / 0.3);
+  .card-deepseek {
+    border-color: hsl(var(--deepseek));
+    box-shadow: var(--shadow-model) hsl(var(--deepseek) / 0.3);
   }
 
   .card-llama {

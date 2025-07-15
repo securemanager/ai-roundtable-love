@@ -81,15 +81,15 @@ export const useAI = () => {
     return data.candidates[0]?.content?.parts[0]?.text || 'No response received';
   };
 
-  const callGrok = async (prompt: string, apiKey: string): Promise<string> => {
-    const response = await fetch('https://api.x.ai/v1/chat/completions', {
+  const callDeepSeek = async (prompt: string, apiKey: string): Promise<string> => {
+    const response = await fetch('https://api.deepseek.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        model: 'grok-beta',
+        model: 'deepseek-chat',
         messages: [{ role: 'user', content: prompt }],
         max_tokens: 500,
         temperature: 0.7,
@@ -98,8 +98,8 @@ export const useAI = () => {
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
-      const errorMessage = errorData?.error?.message || `Grok API returned ${response.status} ${response.statusText}`;
-      throw new Error(`Grok Error: ${errorMessage}`);
+      const errorMessage = errorData?.error?.message || `DeepSeek API returned ${response.status} ${response.statusText}`;
+      throw new Error(`DeepSeek Error: ${errorMessage}`);
     }
 
     const data = await response.json();
@@ -154,9 +154,9 @@ export const useAI = () => {
           if (!apiKeys.google) throw new Error('Missing API key for Gemini. Please add your Google AI API key in Settings.');
           content = await callGemini(prompt, apiKeys.google);
           break;
-        case 'grok':
-          if (!apiKeys.xai) throw new Error('Missing API key for Grok. Please add your xAI API key in Settings.');
-          content = await callGrok(prompt, apiKeys.xai);
+        case 'deepseek':
+          if (!apiKeys.deepseek) throw new Error('Missing API key for DeepSeek. Please add your DeepSeek API key in Settings.');
+          content = await callDeepSeek(prompt, apiKeys.deepseek);
           break;
         case 'llama':
           if (!apiKeys.ollama) throw new Error('Missing Ollama URL. Please add your Ollama server URL in Settings.');
@@ -233,7 +233,7 @@ Please provide a concise summary that synthesizes the key insights from these re
     setResponses({});
     setChatgptResponse({ modelId: 'chatgpt', content: '', isLoading: false });
 
-    const modelIds = ['claude', 'gemini', 'grok', 'llama'];
+    const modelIds = ['claude', 'gemini', 'deepseek', 'llama'];
     const promises = modelIds.map(async (modelId) => {
       try {
         await callModel(modelId, prompt);

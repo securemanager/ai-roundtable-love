@@ -16,7 +16,7 @@ export interface APIKeys {
   openai: string;
   anthropic: string;
   google: string;
-  xai: string;
+  deepseek: string;
   ollama: string;
 }
 
@@ -34,9 +34,9 @@ export const AI_MODELS: AIModel[] = [
     position: { x: 'right-0', y: 'top-0' }
   },
   {
-    id: 'grok',
-    name: 'Grok', 
-    color: 'grok',
+    id: 'deepseek',
+    name: 'DeepSeek', 
+    color: 'deepseek',
     position: { x: 'left-0', y: 'bottom-0' }
   },
   {

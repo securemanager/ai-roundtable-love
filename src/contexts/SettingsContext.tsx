@@ -24,7 +24,7 @@ export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     openai: '',
     anthropic: '',
     google: '',
-    xai: '',
+    deepseek: '',
     ollama: ''
   });
 
