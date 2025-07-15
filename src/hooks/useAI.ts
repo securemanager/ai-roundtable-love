@@ -145,6 +145,10 @@ export const useAI = () => {
       let content = '';
 
       switch (modelId) {
+        case 'openai':
+          if (!apiKeys.openai) throw new Error('Missing API key for ChatGPT. Please add your OpenAI API key in Settings.');
+          content = await callOpenAI(prompt, apiKeys.openai);
+          break;
         case 'claude':
           if (!apiKeys.anthropic) throw new Error('Missing API key for Claude. Please add your Anthropic API key in Settings.');
           if (!apiKeys.anthropic.startsWith('sk-ant-')) throw new Error('Invalid Anthropic API key format. Key should start with "sk-ant-"');
@@ -233,7 +237,7 @@ Please provide a concise summary that synthesizes the key insights from these re
     setResponses({});
     setChatgptResponse({ modelId: 'chatgpt', content: '', isLoading: false });
 
-    const modelIds = ['claude', 'gemini', 'deepseek', 'llama'];
+    const modelIds = ['openai', 'claude', 'gemini', 'deepseek', 'llama'];
     const promises = modelIds.map(async (modelId) => {
       try {
         await callModel(modelId, prompt);

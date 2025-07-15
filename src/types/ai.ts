@@ -22,27 +22,33 @@ export interface APIKeys {
 
 export const AI_MODELS: AIModel[] = [
   {
+    id: 'openai',
+    name: 'ChatGPT',
+    color: 'chatgpt',
+    position: { x: 'left-0', y: 'top-0' }
+  },
+  {
     id: 'claude',
     name: 'Claude',
     color: 'claude',
-    position: { x: 'left-0', y: 'top-0' }
+    position: { x: 'right-0', y: 'top-0' }
   },
   {
     id: 'gemini', 
     name: 'Gemini',
     color: 'gemini',
-    position: { x: 'right-0', y: 'top-0' }
+    position: { x: 'left-0', y: 'bottom-0' }
   },
   {
     id: 'deepseek',
     name: 'DeepSeek', 
     color: 'deepseek',
-    position: { x: 'left-0', y: 'bottom-0' }
+    position: { x: 'right-0', y: 'bottom-0' }
   },
   {
     id: 'llama',
     name: 'LLaMA',
     color: 'llama', 
-    position: { x: 'right-0', y: 'bottom-0' }
+    position: { x: 'left-1/2', y: 'bottom-0 transform -translate-x-1/2' }
   }
 ];
